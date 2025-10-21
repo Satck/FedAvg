@@ -1,0 +1,31 @@
+# configs/base_config.yaml
+
+experiment:
+  name: "mnist_cnn_fedavg"
+  description: "MNIST CNN with FederatedAveraging"
+  seed: 42
+
+data:
+  dataset: "mnist"
+  data_dir: "./data/mnist"
+  num_clients: 100
+  partition: "iid"  # 'iid' or 'noniid'
+
+model:
+  name: "cnn"
+  
+federated:
+  clients_per_round: 10  # C = 0.1
+  local_epochs: 5        # E
+  batch_size: 10         # B
+  
+training:
+  num_rounds: 200
+  learning_rate: 0.01    # η
+  eval_every: 10
+  target_accuracy: 0.99  # 目标准确率
+  device: "cuda"  # 'cuda' or 'cpu'
+
+client_selection:
+  distribution: "uniform"
+  config: {}
