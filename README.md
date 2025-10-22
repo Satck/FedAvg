@@ -1,278 +1,274 @@
-# 联邦学习论文复现：MNIST CNN实验
+# 联邦学习客户端选择分布对比实验 🚀
 
-本项目复现了论文《Communication-Efficient Learning of Deep Networks from Decentralized Data》中的核心算法FederatedAveraging (FedAvg)，并在MNIST数据集上进行了实验验证。
+## 📊 项目概述
 
-## 🎯 实验内容
+本项目复现了论文《Communication-Efficient Learning of Deep Networks from Decentralized Data》中的核心算法FederatedAveraging (FedAvg)，并专注于对比**5种不同客户端选择概率分布**对联邦学习性能的影响。
 
-- ✅ MNIST数据集（IID和Non-IID分布）
-- ✅ CNN模型（1,663,370参数）
-- ✅ FederatedAveraging算法
-- ✅ 5种客户端选择概率分布对比
+### 🎯 实验范围
+- ✅ **数据集**: MNIST (IID 分布)
+- ✅ **模型**: CNN (1,708,106参数)
+- ✅ **算法**: FederatedAveraging (FedAvg)
+- ✅ **核心对比**: 5种客户端选择概率分布
+  - 🔵 **Uniform** (均匀分布) - 基准
+  - 🟠 **Binomial** (二项分布) - Beta分布概率选择
+  - 🟢 **Poisson** (泊松分布) - 泊松随机选择
+  - 🔴 **Normal** (正态分布) - 空间权重选择  
+  - 🟣 **Exponential** (指数分布) - 指数衰减选择
+
+### 🔬 实验目标
+1. 对比不同客户端选择分布的**收敛性能**
+2. 分析各分布的**公平性**（选择均匀程度）
+3. 研究**训练效率**和时间成本
+4. 提供**可视化对比**和详细分析报告
 
 ## 🚀 快速开始
 
-### 1. 安装依赖
+### 📦 环境准备
 
+**1. 克隆项目**
+```bash
+git clone <repository_url>
+cd FedAvg
+```
+
+**2. 安装依赖**
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. 验证实现
-
+**3. 验证环境**
 ```bash
 python test_implementation.py
 ```
 
-### 3. 运行实验
+### 🎮 运行实验
 
-**方法一：单独运行每个分布（推荐）**
+#### 方法一：单个分布实验（推荐用于学习）
+
 ```bash
-python run_uniform.py      # 均匀分布（基准）
-python run_binomial.py     # 二项分布
-python run_poisson.py      # 泊松分布
-python run_normal.py       # 正态分布
-python run_exponential.py  # 指数分布
+# 运行均匀分布实验
+python run_uniform.py
+
+# 运行二项分布实验  
+python run_binomial.py
+
+# 运行泊松分布实验
+python run_poisson.py
+
+# 运行正态分布实验
+python run_normal.py
+
+# 运行指数分布实验
+python run_exponential.py
 ```
 
-**方法二：完整实验套件**
+#### 方法二：批量运行所有实验（推荐用于完整对比）
+
 ```bash
-cd experiments
-python run_iid_experiments.py        # IID基准实验
-python run_noniid_experiments.py     # Non-IID基准实验
-python run_distribution_comparison.py # 分布对比实验
-python generate_report.py            # 生成实验报告
+# 一次性运行所有5个分布实验
+python run_all_distributions.py
 ```
 
-### 4. 查看实验日志
+#### 方法三：可视化结果
 
-**列出所有日志：**
 ```bash
-python view_logs.py --list
+# 自动检测并可视化所有已完成的实验
+python visualize.py
 ```
 
-**查看最新日志：**
-```bash
-python view_logs.py --latest
-```
-
-**搜索日志内容：**
-```bash
-python view_logs.py --search "准确率"
-```
-
-## 📁 项目结构
+### 📊 项目结构
 
 ```
 FedAvg/
-├── src/                     # 源代码
-│   ├── client_selection/   # 客户端选择策略
-│   │   ├── base_selector.py
-│   │   ├── uniform_selector.py
-│   │   ├── binomial_selector.py
-│   │   ├── poisson_selector.py
-│   │   ├── normal_selector.py
-│   │   └── exponential_selector.py
-│   ├── data/               # 数据处理
-│   │   └── mnist_data.py
-│   ├── models/             # CNN模型
-│   │   └── cnn_model.py
-│   ├── algorithms/         # FedAvg算法
-│   │   └── fedavg.py
-│   └── utils/              # 工具函数
-│       └── visualization.py
+├── src/                     # 核心源代码
+│   ├── client_selection/   # 5种客户端选择策略
+│   ├── data/               # MNIST数据处理
+│   ├── models/             # CNN模型定义  
+│   └── algorithms/         # FedAvg算法实现
 ├── experiments/            # 实验脚本
-│   ├── run_iid_experiments.py
-│   ├── run_noniid_experiments.py
-│   ├── run_distribution_comparison.py
-│   └── generate_report.py
+│   └── run_single_distribution.py
 ├── configs/                # 配置文件
 │   └── base_config.yaml
 ├── results/                # 实验结果
-│   ├── logs/              # 实验日志文件
-│   ├── models/            # 训练好的模型
-│   └── figures/           # 可视化图表
-├── data/                   # MNIST数据
-├── run_*.py               # 单分布实验快捷脚本
-├── view_logs.py           # 日志查看工具
-└── requirements.txt
+│   ├── logs/              # 详细训练日志
+│   ├── models/            # 保存的模型
+│   └── figures/           # 对比图表
+├── run_*.py               # 单分布运行脚本
+├── run_all_distributions.py  # 批量运行脚本
+├── visualize.py           # TIFL风格可视化
+├── test_implementation.py # 环境测试
+└── requirements.txt       # 依赖包列表
 ```
 
-## 🔬 实验设计
+## 🔧 核心功能
 
-### 数据分布
-- **IID**: 随机均匀分配给100个客户端
-- **Non-IID**: 每个客户端只包含2种数字类别
+### 📈 实验配置
 
-### 模型架构
-- Conv1: 5×5, 32 channels, ReLU, MaxPool 2×2
-- Conv2: 5×5, 64 channels, ReLU, MaxPool 2×2  
-- FC1: 512 units, ReLU
-- FC2: 10 units (output)
-- **总参数量**: 1,663,370
+**默认超参数**：
+- 客户端总数：100
+- 每轮选择客户端数：10 (C=0.1)  
+- 本地训练轮数：5 (E=5)
+- 批大小：10 (B=10)
+- 学习率：0.01
+- 总训练轮数：200
+- 数据分布：IID
 
-### 超参数设置
-- 客户端数量: K = 100
-- 每轮选择: C = 0.1 (10个客户端)
-- 本地训练: E = 5 epochs
-- 批大小: B = 10
-- 学习率: η = 0.01
-- 总轮数: 200轮
+### 🎯 5种客户端选择分布
 
-### 客户端选择策略
+| 分布 | 描述 | 核心参数 |
+|------|------|----------| 
+| 🔵 **Uniform** | 均匀随机选择 | 无 |
+| 🟠 **Binomial** | Beta分布概率选择 | α=2, β=5 |
+| 🟢 **Poisson** | 泊松分布随机选择 | λ=5 |
+| 🔴 **Normal** | 正态分布空间权重 | σ=1.0 |
+| 🟣 **Exponential** | 指数衰减选择 | λ=1.0 |
 
-| 策略 | 参数 | 特点 |
-|------|------|------|
-| **均匀分布** | - | 完全公平选择（基准） |
-| **二项分布** | α=2, β=5 | 异构成功概率 |
-| **泊松分布** | λ=5 | 基于优先级选择 |
-| **正态分布** | σ=1.0 | 中心偏好选择 |
-| **指数分布** | λ=1.0 | 头部优先选择 |
-
-## 📊 预期结果
-
-### IID vs Non-IID
-- **IID最终准确率**: ~96.78%
-- **Non-IID最终准确率**: ~95.23%
-
-### 客户端选择分布对比
-
-| 分布 | 最终准确率 | 选择标准差 | 公平性 |
-|------|-----------|-----------|--------|
-| Uniform | 0.9678 | 2.1 | ⭐⭐⭐⭐⭐ |
-| Binomial | 0.9654 | 4.5 | ⭐⭐⭐⭐ |
-| Poisson | 0.9623 | 3.8 | ⭐⭐⭐ |
-| Normal | 0.9512 | 8.2 | ⭐⭐ |
-| Exponential | 0.9345 | 15.3 | ⭐ |
-
-## 💡 核心发现
-
-1. **均匀分布**提供最佳的性能-公平性权衡
-2. **指数分布**虽然可能加快收敛，但严重损害公平性
-3. **Non-IID数据**显著降低联邦学习性能
-4. **客户端选择策略**对最终性能有重要影响
-
-## 📝 日志系统
-
-### 日志功能
-
-每个实验都会自动生成详细的日志文件，包含：
-
-- **实验配置信息**：分布类型、参数设置、超参数
-- **数据加载过程**：数据集大小、客户端划分
-- **模型信息**：参数量、架构详情
-- **训练过程**：每轮进度、评估结果、耗时统计
-- **结果分析**：最终准确率、收敛分析、公平性指标
-
-### 日志文件命名
+### 🏗️ CNN模型架构
 
 ```
-results/logs/{分布名称}_{年月日}_{时分秒}.log
+输入: 28×28×1 (MNIST)
+├── Conv1: 5×5, 32通道, ReLU
+├── MaxPool: 2×2
+├── Conv2: 5×5, 64通道, ReLU  
+├── MaxPool: 2×2
+├── FC1: 1600神经元, ReLU
+└── FC2: 10神经元 (输出)
 
-例如：
-- uniform_20241021_143022.log      # 均匀分布实验
-- binomial_20241021_144530.log     # 二项分布实验
-- poisson_20241021_150045.log      # 泊松分布实验
+总参数量: 1,708,106
 ```
 
-### 日志查看工具
+## 📊 实验结果示例
 
-**查看所有日志文件：**
+基于已完成的uniform和poisson分布实验：
+
+| 分布 | 最终准确率 | 训练时间 | 公平性比率* |
+|------|-----------|----------|-------------|
+| 🔵 Uniform | 99.13% | 41.1 min | 3.10 |
+| 🟢 Poisson | 99.14% | 42.5 min | - |
+
+*公平性比率 = 最大选择次数/最小选择次数（越接近1越公平）
+
+## 🎨 可视化功能
+运行 `python visualize.py` 后自动生成包含4个子图的对比图：
+
+1. **Accuracy vs Round** - 准确率随轮次变化
+2. **Loss vs Round** - 损失随轮次变化  
+3. **Accuracy vs Time** - 准确率随时间变化
+4. **Training Time per Round** - 每轮训练时间
+
+### 特色功能
+
+- ✅ **自动检测**：扫描所有已完成实验
+- ✅ **实时更新**：每次新实验后重新可视化包含所有数据
+- ✅ **颜色区分**：每个分布用不同颜色清晰标识
+- ✅ **详细统计**：显示性能排名和收敛分析
+
+## 📝 详细日志
+
+每次实验都会生成详细的训练日志：
+
+```
+results/logs/uniform_20251021_035945.log
+```
+
+日志内容包括：
+- 每轮的准确率和损失
+- 选中的客户端ID
+- 训练时间统计
+- 实验配置信息
+- 最终性能摘要
+
+## 🛠️ 使用指南
+
+### 📋 完整实验流程
+
+**推荐顺序**：
+
+1. **环境测试** 
 ```bash
-python view_logs.py --list
+python test_implementation.py
 ```
 
-**查看指定日志（按编号）：**
+2. **运行单个实验** (学习阶段)
 ```bash
-python view_logs.py --view 1      # 查看编号为1的日志
+python run_uniform.py
+python visualize.py  # 查看结果
 ```
 
-**查看最新日志：**
+3. **批量运行** (对比分析)
 ```bash
-python view_logs.py --latest
+python run_all_distributions.py  # 自动运行所有实验并生成对比图
 ```
 
-**查看日志的最后20行：**
-```bash
-python view_logs.py --latest --lines -20
-```
+### 🔧 自定义配置
 
-**搜索日志内容：**
-```bash
-python view_logs.py --search "准确率"
-python view_logs.py --search "训练完成"
-```
-
-## 🔧 自定义实验
-
-### 修改超参数
-
-编辑 `configs/base_config.yaml`:
+修改 `configs/base_config.yaml` 可以调整实验参数：
 
 ```yaml
 federated:
-  clients_per_round: 10  # 调整每轮选择的客户端数
-  local_epochs: 5        # 调整本地训练轮数
-  
+  clients_per_round: 10    # 每轮选择的客户端数 (C)
+  local_epochs: 5          # 本地训练轮数 (E)
+  batch_size: 10           # 批大小 (B)
+
 training:
-  num_rounds: 200        # 调整总训练轮数
-  learning_rate: 0.01    # 调整学习率
+  num_rounds: 200          # 总训练轮数
+  learning_rate: 0.01      # 学习率 (η)
 ```
 
-### 添加新的选择策略
+### 📂 结果文件说明
 
-1. 继承 `ClientSelector` 基类
-2. 实现 `select()` 方法
-3. 在实验脚本中注册新策略
+实验完成后，在 `results/` 目录可以找到：
 
-### 使用不同数据集
+- **📊 `*_results.pt`** - 完整实验数据（准确率、损失、配置等）
+- **🤖 `models/*.pt`** - 训练好的模型权重
+- **📝 `logs/*.log`** - 详细训练日志（UTF-8编码，支持中文）
+- **📈 `figures/*.png`** - TIFL风格对比图表
 
-修改 `src/data/` 模块，实现新的数据加载和划分函数。
+## 📚 论文与引用
 
-## 📈 结果分析
+### 原论文信息
+- **标题**: Communication-Efficient Learning of Deep Networks from Decentralized Data
+- **作者**: H. Brendan McMahan, Eider Moore, Daniel Ramage, Seth Hampson, Blaise Agüera y Arcas
+- **发表**: AISTATS 2017
 
-实验完成后，检查以下文件：
+### 引用格式
+```bibtex
+@inproceedings{mcmahan2017communication,
+  title={Communication-efficient learning of deep networks from decentralized data},
+  author={McMahan, H Brendan and Moore, Eider and Ramage, Daniel and Hampson, Seth and y Arcas, Blaise Ag{\"u}era},
+  booktitle={Artificial intelligence and statistics},
+  pages={1273--1282},
+  year={2017},
+  organization={PMLR}
+}
+```
 
-- `results/iid_baseline_results.pt` - IID实验结果
-- `results/noniid_baseline_results.pt` - Non-IID实验结果  
-- `results/distribution_comparison_results.pt` - 分布对比结果
-- `results/figures/` - 可视化图表
-
-## 🐛 故障排除
+## 🤝 技术支持
 
 ### 常见问题
 
-1. **CUDA内存不足**
-   - 减少批大小或客户端数量
-   - 使用CPU: 修改配置文件中的 `device: "cpu"`
+**Q: 实验运行速度慢？**
+A: CNN训练需要一定时间。200轮大约需要40分钟（CPU）。可以在配置文件中减少 `num_rounds`。
 
-2. **收敛慢或不收敛**
-   - 调整学习率
-   - 增加本地训练轮数
-   - 检查数据划分是否正确
+**Q: 想要修改分布参数？**
+A: 编辑各个 `run_*.py` 文件中的配置，或修改 `experiments/run_single_distribution.py` 中的 `get_distribution_config()` 函数。
 
-3. **导入模块错误**
-   - 确保在项目根目录运行脚本
-   - 检查Python路径设置
+**Q: 可视化图表显示问题？**
+A: 确保安装了 `matplotlib` 和 `seaborn`。如果字体有问题，可能是中文字体支持问题。
 
-### 性能优化
+### 开发扩展
 
-- 使用GPU训练
-- 调整 `num_workers` 参数
-- 使用更小的数据集进行快速测试
-
-## 🤝 贡献
-
-欢迎提交Issue和Pull Request来改进这个项目！
+- 📈 **添加新的客户端选择分布**: 继承 `ClientSelector` 基类
+- 🗂️ **支持其他数据集**: 修改 `src/data/` 模块
+- 🏗️ **使用其他模型**: 修改 `src/models/` 模块
+- 🔬 **Non-IID实验**: 当前专注于IID，可扩展Non-IID划分
 
 ## 📄 许可证
 
-MIT License
+MIT License - 详见项目根目录 LICENSE 文件
 
 ---
 
-**实验重点**：
-1. 验证FedAvg在MNIST上的有效性 ✅
-2. 对比IID和Non-IID数据分布的影响 ✅  
-3. 研究不同客户端选择概率分布的性能差异 ✅
-4. 分析公平性与性能的权衡 ✅
+**⭐ 如果这个项目对您有帮助，请给个Star！**
 
+**🚀 Happy Federated Learning!**

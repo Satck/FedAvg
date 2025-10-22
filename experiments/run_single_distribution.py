@@ -175,7 +175,8 @@ def run_single_distribution(distribution_name, custom_config=None):
     train_start_time = time.time()
     history, selection_stats = fed_alg.train(
         num_rounds=base_config['training']['num_rounds'],
-        eval_every=base_config['training']['eval_every']
+        eval_every=base_config['training']['eval_every'],
+        logger=logger
     )
     train_end_time = time.time()
     training_duration = train_end_time - train_start_time

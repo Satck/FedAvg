@@ -170,12 +170,15 @@ class FederatedAveraging:
         
         return accuracy, test_loss
     
-    def train_round(self, round_num: int) -> None:
+    def train_round(self, round_num: int) -> Dict[str, Any]:
         """
         执行一轮联邦学习
         
         Args:
             round_num: 当前轮次
+            
+        Returns:
+            round_info: 本轮详细信息
         """
         # 使用客户端选择器选择客户端
         selected_clients = self.client_selector.select(
@@ -201,11 +204,23 @@ class FederatedAveraging:
         
         # 聚合模型
         self.aggregate_models(client_weights_list, client_data_sizes)
+        
+        # 记录选择历史
+        self.client_selector.record_selection(selected_clients, round_num)
+        
+        # 返回本轮信息
+        return {
+            'round': round_num,
+            'selected_clients': selected_clients.tolist(),
+            'num_selected': len(selected_clients),
+            'client_data_sizes': client_data_sizes
+        }
     
     def train(self, 
               num_rounds: int, 
               eval_every: int = 10,
-              target_accuracy: float = None) -> Tuple[Dict, Dict]:
+              target_accuracy: float = None,
+              logger=None) -> Tuple[Dict, Dict]:
         """
         完整训练流程
         
@@ -213,51 +228,91 @@ class FederatedAveraging:
             num_rounds: 总训练轮数
             eval_every: 每隔多少轮评估一次
             target_accuracy: 目标准确率（达到后可提前停止）
+            logger: 日志记录器
             
         Returns:
             history: 训练历史
             selection_stats: 客户端选择统计
         """
-        print(f"\n{'='*80}")
-        print(f"开始训练")
-        print(f"  - 总轮数: {num_rounds}")
-        print(f"  - 客户端选择器: {self.client_selector.get_name()}")
-        print(f"{'='*80}\n")
+        # 扩展历史记录结构，记录每轮详细数据
+        detailed_history = {
+            'rounds': [],
+            'test_acc': [],
+            'test_loss': [],
+            'selected_clients': [],
+            'round_details': []
+        }
+        
+        log_func = logger.info if logger else print
+        
+        log_func(f"\n{'='*80}")
+        log_func(f"开始训练")
+        log_func(f"  - 总轮数: {num_rounds}")
+        log_func(f"  - 客户端选择器: {self.client_selector.get_name()}")
+        log_func(f"{'='*80}\n")
         
         # 初始评估
         init_acc, init_loss = self.evaluate()
-        print(f"初始 | Test Acc: {init_acc:.4f} | Test Loss: {init_loss:.4f}")
+        log_func(f"📊 初始性能 | Test Acc: {init_acc:.4f} | Test Loss: {init_loss:.4f}")
+        log_func("-"*60)
         
         # 训练循环
         for round_num in tqdm(range(1, num_rounds + 1), desc="Training"):
             # 训练一轮
-            self.train_round(round_num)
+            round_info = self.train_round(round_num)
             
-            # 定期评估
+            # 每轮都进行评估以获得完整数据
+            acc, loss = self.evaluate()
+            
+            # 记录详细历史
+            detailed_history['rounds'].append(round_num)
+            detailed_history['test_acc'].append(acc)
+            detailed_history['test_loss'].append(loss)
+            detailed_history['selected_clients'].append(round_info['selected_clients'])
+            detailed_history['round_details'].append(round_info)
+            
+            # 每轮都记录基本信息到日志
+            selected_clients_str = str(round_info['selected_clients'][:5])  # 只显示前5个
+            if len(round_info['selected_clients']) > 5:
+                selected_clients_str = selected_clients_str[:-1] + ", ...]"
+            
+            log_func(f"🔄 Round {round_num:3d} | Acc: {acc:.4f} | Loss: {loss:.4f} | "
+                    f"选中: {selected_clients_str}")
+            
+            # 定期显示详细信息
             if round_num % eval_every == 0 or round_num == 1:
-                acc, loss = self.evaluate()
-                
-                # 记录历史
-                self.history['rounds'].append(round_num)
-                self.history['test_acc'].append(acc)
-                self.history['test_loss'].append(loss)
-                
-                print(f"Round {round_num:4d} | Test Acc: {acc:.4f} | Test Loss: {loss:.4f}")
+                log_func(f"   📈 详细 Round {round_num:3d} | Test Acc: {acc:.4f} | Test Loss: {loss:.4f}")
+                log_func(f"   👥 选中客户端: {round_info['selected_clients']}")
+                log_func(f"   📊 选中数量: {len(round_info['selected_clients'])}/{self.num_clients}")
+                log_func("-"*60)
                 
                 # 检查是否达到目标准确率
                 if target_accuracy is not None and acc >= target_accuracy:
-                    print(f"\n达到目标准确率 {target_accuracy:.2%}，提前停止训练")
+                    log_func(f"\n🎯 达到目标准确率 {target_accuracy:.2%}，提前停止训练")
                     break
         
         # 最终评估
         final_acc, final_loss = self.evaluate()
-        print(f"\n{'='*80}")
-        print(f"训练完成")
-        print(f"  - 最终准确率: {final_acc:.4f}")
-        print(f"  - 最终损失: {final_loss:.4f}")
-        print(f"{'='*80}\n")
+        log_func(f"\n{'='*80}")
+        log_func(f"🎉 训练完成")
+        log_func(f"  - 最终准确率: {final_acc:.4f}")
+        log_func(f"  - 最终损失: {final_loss:.4f}")
+        
+        # 显示训练过程统计
+        if len(detailed_history['test_acc']) > 1:
+            max_acc = max(detailed_history['test_acc'])
+            min_loss = min(detailed_history['test_loss'])
+            improvement = detailed_history['test_acc'][-1] - detailed_history['test_acc'][0]
+            log_func(f"  - 最佳准确率: {max_acc:.4f}")
+            log_func(f"  - 最低损失: {min_loss:.4f}")
+            log_func(f"  - 准确率提升: {improvement:+.4f}")
+        
+        log_func(f"{'='*80}\n")
         
         # 获取客户端选择统计
         selection_stats = self.client_selector.get_selection_statistics()
         
-        return self.history, selection_stats
+        # 更新self.history为详细历史
+        self.history = detailed_history
+        
+        return detailed_history, selection_stats
