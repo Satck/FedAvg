@@ -45,8 +45,19 @@ class NormalSelector(ClientSelector):
             scores = np.random.normal(self.mu, self.sigma, self.num_clients)
         
         # 转换为正值权重
-        scores_shifted = scores - scores.min() + 1e-6
-        weights = scores_shifted / scores_shifted.sum()
+        # 方法1: 使用 softmax (更稳定，避免极端值)
+        if method == 'random_scores':
+            # 对于随机分数，使用 softmax 转换
+            # 首先标准化分数以避免数值溢出
+            scores_normalized = (scores - scores.mean()) / (scores.std() + 1e-8)
+            exp_scores = np.exp(scores_normalized)
+            weights = exp_scores / exp_scores.sum()
+        else:
+            # 对于其他方法，使用传统的平移和归一化
+            # 但添加最小权重阈值以避免过小值
+            scores_shifted = scores - scores.min() + 1e-3  # 增大阈值
+            weights = scores_shifted / scores_shifted.sum()
+        
         return weights
     
     def select(self, num_select: int, round_num: int = 0) -> np.ndarray:
